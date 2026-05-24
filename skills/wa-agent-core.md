@@ -34,7 +34,10 @@ Each tenant loads:
 4. Ask one useful next question if needed.
 5. Capture key data.
 6. Handoff when human authority is required.
-7. Produce summary when escalating.
+7. Notify the tenant admin on their private WhatsApp number.
+8. Pause the AI for that customer conversation.
+9. Let the human admin reply using the same business WhatsApp/agent number.
+10. Resume only when explicitly released or when tenant timeout policy allows.
 
 ## Scope wall
 

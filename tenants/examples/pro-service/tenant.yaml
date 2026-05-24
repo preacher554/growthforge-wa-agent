@@ -29,6 +29,13 @@ data_sources:
   sales_script: tenants/examples/pro-service/sales-script.md
   handoff_rules: tenants/examples/pro-service/handoff-rules.md
 
+handoff:
+  admin_name: Owner Growth Helper Studio
+  admin_private_whatsapp: "+62xxxx" # receives handoff notifications only
+  reply_channel: same_business_whatsapp_number
+  ai_pause_on_handoff: true
+  resume_policy: manual_release_or_timeout
+
 memory:
   namespace: tenant:example_pro_agency
   retention_days: 180
