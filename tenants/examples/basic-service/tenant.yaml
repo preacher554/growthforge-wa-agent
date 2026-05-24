@@ -1,0 +1,30 @@
+tenant_id: example_basic_service
+business_name: AC Cepat Jaya
+package: basic
+whatsapp_instance: wa_ac_cepat_jaya
+
+skills:
+  - wa-agent-core
+  - wa-agent-basic
+
+capabilities:
+  faq_answering: true
+  business_info: true
+  basic_memory: true
+  simple_intake: true
+  human_handoff: true
+  lead_qualification: false
+  sku_lookup: false
+  stock_lookup: false
+  payment_check: false
+  ongkir_check: false
+  meta_ads: false
+
+data_sources:
+  business_profile: tenants/examples/basic-service/business-profile.md
+  faq: tenants/examples/basic-service/faq.md
+  handoff_rules: tenants/examples/basic-service/handoff-rules.md
+
+memory:
+  namespace: tenant:example_basic_service
+  retention_days: 90
