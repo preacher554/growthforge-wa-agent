@@ -32,20 +32,20 @@ GrowthForge starts as a **managed setup**, not a self-serve SaaS:
 
 ## Repo map
 
-- `PRODUCT.md` — product definition and strategic positioning.
-- `PACKAGE_STRUCTURE.md` — Basic and Pro scope boundaries.
-- `research/haloai-reference.md` — HaloAI notes from website and WA intel chat.
-- `skills/` — package-level operating skills.
-- `personas/` — agent personas, including Lia.
-- `prompts/` — reusable system prompts and prompt blocks.
-- `onboarding/` — intake forms and customer data requirements.
-- `sops/` — operational procedures.
-- `policies/` — scope, safety, escalation, and data rules.
-- `tenants/examples/` — example tenant configs for Basic and Pro.
+| Folder | Isi | Keterangan |
+|---|---|---|
+| `lia-profil/` | Persona + system prompt Lia | Profil identitas Lia (seperti "diri" Lia) |
+| `skills/` | WA Agent Core, Basic, Pro | Skill operasional yang dipakai runtime |
+| `runbook/` | SOP, arsitektur, integrasi | Dokumentasi operasional & teknis |
+| `policies/` | Scope wall, data ownership | Aturan main & boundary |
+| `tenants/examples/` | Contoh tenant Basic & Pro | Template konfigurasi per client |
+| `onboarding/` | Intake form | Form pengumpulan data client |
+| `templates/` | Lead summary template | Template ringkasan lead |
+| `research/` | HaloAI reference | Riset kompetitor |
 
 ## Core principle
 
-Do not sell “AI”. Sell a business outcome:
+Do not sell "AI". Sell a business outcome:
 
 - customer chats get answered faster,
 - leads do not disappear,
