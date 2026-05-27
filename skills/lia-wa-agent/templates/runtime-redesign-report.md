@@ -102,11 +102,60 @@ Define risk levels, approvals, tool manifests, idempotency, validation, and audi
 
 Define events, logs, metrics, traces, admin timeline, dead letters, and replay.
 
+## Humanization and interaction quality
+
+Assess whether the runtime produces natural-feeling WhatsApp interactions.
+
+- Is response delay calculated or constant?
+- Is a typing indicator shown before sending?
+- Are long messages chunked at paragraph boundaries?
+- Is pacing implemented as a durable delayed job or fragile setTimeout?
+- What does the reply timing look like to a customer?
+
+Describe the humanization gap and what the target behavior is.
+
+## Emotional signal layer
+
+Assess whether emotional and urgency signals are tracked as runtime data.
+
+- Are signals written to a database table or only used inside prompts?
+- Can escalation routing use accumulated signal history?
+- Does urgency detection short-circuit the buffer window?
+- Can the tenant see emotional state analytics?
+
+Describe what needs to be added and at which phase.
+
+## Competitive differentiation opportunities
+
+Identify specific runtime behaviors where this system can exceed commodity WhatsApp AI platforms.
+
+Common areas where managed WhatsApp AI products are weak:
+- Fragment handling: reply to each fragment individually instead of merging
+- Typing pacing: instant replies that feel robotic
+- Same-number takeover: route customer to a different number or no detection at all
+- Context after human session: AI resumes with no knowledge of what the human said
+- Emotional routing: no threshold logic, just prompt instructions
+
+List which of these are addressed by the current design and which remain as gaps.
+
+## Resilience and failure behavior
+
+Assess whether the runtime handles failures without leaving customers in silence.
+
+- What happens when the LLM provider times out or returns 429?
+- Is retry backoff exponential or immediate?
+- What happens when retries are exhausted?
+- Does the customer receive a message? Does the admin receive an alert?
+- Can outbox retries regenerate a different AI reply than the original?
+- Is there a stale lock recovery mechanism?
+
+If any of these produce silence or undefined behavior, list them as High or Critical risks.
+
 ## Technology recommendations
 
 Recommend concrete infrastructure based on the user stack. Include migration-safe alternatives.
 
-For Node.js + Evolution API runtimes, BullMQ + Redis is usually the practical v1 recommendation for queues, delayed buffer flushes, pacing jobs, retries, and dead-letter handling.
+For Node.js + Evolution API runtimes, BullMQ + Redis is the practical v1 recommendation. For 50+ concurrent active conversations, note that Kafka partition-by-phone provides stronger FIFO ordering guarantees.
 
 ## Implementation roadmap
 

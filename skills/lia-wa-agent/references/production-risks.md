@@ -34,3 +34,40 @@
 ## Design principle
 
 Production WhatsApp AI is not primarily an intelligence benchmark. It is a distributed communication runtime. Prioritize ordering, ownership, memory continuity, idempotency, policy boundaries, and recovery.
+
+## Humanization risks
+
+- AI replies within 1 second of receiving a message. Users immediately identify this as a bot.
+- No typing indicator is shown before message delivery.
+- Long replies sent as a single unbroken wall of text.
+- Multiple message chunks sent in rapid succession without inter-chunk delay.
+- Pacing timer implemented as setTimeout which does not survive worker restarts.
+
+## Continuity risks
+
+- AI resumes after human takeover with no knowledge of what was discussed or promised.
+- Human admin negotiates a price or discount; AI resumes and contradicts it.
+- Resume_pending transition goes directly to idle without writing continuity summary.
+- Continuity summary is written but not injected into AI context window.
+
+## Emotional and urgency risks
+
+- Emotional state detected by LLM prompt in turn 3 is not available in turn 8.
+- No runtime escalation threshold; AI continues trying to qualify an angry customer.
+- Urgency not detected; AI buffers for 1500ms before responding to a time-critical message.
+- No tenant analytics on emotional state; GrowthForge cannot demonstrate AI value to clients.
+
+## Circuit breaker and LLM failure risks
+
+- No retry backoff: LLM failure causes immediate re-queue, flooding the provider and exhausting the worker pool.
+- No circuit breaker: all conversations stall when the LLM provider is down, instead of auto-escalating.
+- Retry exhaustion produces silence: customer receives no message and admin receives no alert.
+- Outbox retry regenerates from LLM instead of stored content, producing a different reply than the first attempt.
+- Webhook handler blocks on LLM call: Evolution retries the webhook, causing duplicate processing even with idempotency.
+- No stale lock recovery: conversation stuck in ai_planning for hours with no customer reply and no admin alert.
+
+## Silent observer risks
+
+- During human_active, AI worker still has write access to outbox_messages and triggers an outbound send.
+- AI updates memory during human session with incorrect inferences, corrupting context before continuity summary runs.
+- Cooldown state is skipped: AI resumes immediately after continuity summary is written, while admin is still typing a final message.

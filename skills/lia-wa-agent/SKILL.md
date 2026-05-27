@@ -186,6 +186,13 @@ journalctl -u lia-runtime.service -n 50 --no-pager
 - `references/runtime-capability-checklist.md` — Full audit checklist for WA AI runtimes
 - `references/production-risks.md` — Risk taxonomy (critical/high/medium)
 - `references/implementation-roadmap.md` — Phased rollout plan (Phase 0–6)
+- `references/runtime-architecture.md` — Module & folder structure, queue topology, Kafka scale-up path
+- `references/database-schema.md` — Full Supabase/Postgres schema: tenants, conversations, messages, outbox, buffers, signals, memories, dead letters, Redis keys, RLS
+- `references/message-buffer-design.md` — Fragment buffering algorithm, merge rules, BullMQ/Redis ZSET patterns
+- `references/humanization-and-pacing.md` — Response delay formula, typing indicator, long message chunking, burst protection
+- `references/emotional-signals.md` — Emotional/urgency/lead temp/escalation risk signal schema, extraction flow, rule-based detection
+- `references/continuity-and-memory.md` — Continuity summarizer, 4-layer memory system (conversation/customer/summary/business), context assembly order
+- `references/circuit-breaker-and-resilience.md` — LLM exponential backoff, auto-escalation on exhaustion, stale lock recovery, Redis SETNX dedupe
 - `templates/runtime-redesign-report.md` — Redesign audit report template
 - `runbook/package-scope-playbook.md` — SOP lengkap: Basic/Pro/Custom scope, flow, QA checklist, intake form
 - `runbook/writing-playbook.md` — **WhatsApp Writing Playbook**: struktur bubble, emoji rules, formatting, template per situasi

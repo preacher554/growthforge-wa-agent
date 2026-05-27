@@ -1,0 +1,328 @@
+# Core database schema
+
+Use this as the reference schema for a Supabase/Postgres runtime. Every table that holds tenant data must include `tenant_id`. Apply RLS when any admin UI or multi-tenant API is added.
+
+## Tenants
+
+```sql
+CREATE TABLE tenants (
+  id TEXT PRIMARY KEY,
+  business_name TEXT NOT NULL,
+  package TEXT NOT NULL CHECK (package IN ('basic', 'pro')),
+  whatsapp_instance TEXT NOT NULL,
+  admin_private_jid TEXT,
+  resume_policy TEXT NOT NULL DEFAULT 'timeout' CHECK (resume_policy IN ('timeout', 'manual', 'both')),
+  resume_timeout_minutes INT NOT NULL DEFAULT 30,
+  buffer_window_ms INT NOT NULL DEFAULT 1500,
+  max_buffer_wait_ms INT NOT NULL DEFAULT 8000,
+  memory_retention_days INT NOT NULL DEFAULT 180,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+## Conversations
+
+```sql
+CREATE TABLE conversations (
+  id TEXT PRIMARY KEY,               -- '{tenant_id}:{customer_jid}'
+  tenant_id TEXT NOT NULL REFERENCES tenants(id),
+  customer_jid TEXT NOT NULL,
+  customer_name TEXT,
+  state TEXT NOT NULL DEFAULT 'idle',
+  -- idle | user_buffering | ai_planning | ai_typing | ai_sending
+  -- handoff_requested | waiting_human | human_active | resume_pending
+  -- failed_recoverable | retrying | suspended | archived
+  owner TEXT NOT NULL DEFAULT 'ai' CHECK (owner IN ('ai', 'human', 'system')),
+  last_message_at TIMESTAMPTZ,
+  last_human_activity_at TIMESTAMPTZ,
+  state_updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON conversations (tenant_id, state);
+CREATE INDEX ON conversations (tenant_id, customer_jid);
+```
+
+## Messages (immutable event log)
+
+```sql
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound', 'system')),
+  source TEXT NOT NULL CHECK (source IN ('customer', 'ai', 'human_admin', 'system')),
+  content TEXT NOT NULL,
+  provider_message_id TEXT,          -- Evolution's message ID
+  outbox_id UUID,                    -- FK to outbox_messages if outbound
+  received_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON messages (conversation_id, received_at);
+CREATE INDEX ON messages (tenant_id, received_at);
+```
+
+## Outbox messages
+
+```sql
+CREATE TABLE outbox_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  content_hash TEXT NOT NULL,        -- sha256 of content; used for fromMe matching
+  source TEXT NOT NULL DEFAULT 'ai' CHECK (source IN ('ai', 'system')),
+  ai_decision_id UUID,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'sending', 'sent', 'failed', 'dead')),
+  provider_message_id TEXT,          -- set by Evolution after delivery
+  attempt_count INT NOT NULL DEFAULT 0,
+  next_retry_at TIMESTAMPTZ,
+  sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON outbox_messages (conversation_id, status);
+CREATE INDEX ON outbox_messages (status, next_retry_at) WHERE status IN ('pending', 'failed');
+```
+
+## Message buffers
+
+```sql
+CREATE TABLE message_buffers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  messages JSONB NOT NULL DEFAULT '[]',
+  -- each item: { id, content, received_at, webhook_event_id }
+  flush_at TIMESTAMPTZ NOT NULL,
+  flushed_at TIMESTAMPTZ,
+  merged_content TEXT,               -- set when flushed
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON message_buffers (conversation_id) WHERE flushed_at IS NULL;
+```
+
+## Webhook events (idempotency log)
+
+```sql
+CREATE TABLE webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  instance_id TEXT NOT NULL,
+  message_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  raw_payload JSONB NOT NULL,
+  processing_status TEXT NOT NULL DEFAULT 'received'
+    CHECK (processing_status IN ('received', 'processing', 'processed', 'failed')),
+  received_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(provider, instance_id, message_id, event_type)
+);
+```
+
+## Runtime events (observability, insert-only)
+
+```sql
+CREATE TABLE runtime_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT,
+  sequence BIGINT NOT NULL,          -- per-conversation sequence for deterministic replay
+  event_type TEXT NOT NULL,
+  payload JSONB NOT NULL DEFAULT '{}',
+  emitted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Sequence is set by: SELECT COALESCE(MAX(sequence), 0) + 1 FROM runtime_events
+--   WHERE conversation_id = ? FOR UPDATE
+-- Or: use a per-conversation sequence table for higher-throughput writes
+
+CREATE INDEX ON runtime_events (tenant_id, conversation_id, sequence ASC);
+CREATE INDEX ON runtime_events (tenant_id, conversation_id, emitted_at DESC);
+CREATE INDEX ON runtime_events (event_type, emitted_at DESC);
+```
+
+### Time-travel debugging
+
+With sequence numbers, replaying a conversation to any point in time is deterministic:
+
+```sql
+-- Reconstruct conversation state up to event sequence 7:
+SELECT * FROM runtime_events
+WHERE conversation_id = 'tenant_x:+62812xxx'
+  AND sequence <= 7
+ORDER BY sequence ASC;
+
+-- Find the exact moment AI and human collided:
+SELECT sequence, event_type, payload, emitted_at
+FROM runtime_events
+WHERE conversation_id = ?
+  AND event_type IN ('human.outbound_detected', 'outbox.sent', 'ownership.changed')
+ORDER BY sequence ASC;
+```
+
+This is the primary tool for debugging keyboard-fighting incidents in production.
+
+## Handoff sessions
+
+```sql
+CREATE TABLE handoff_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  lead_status TEXT,
+  summary TEXT,
+  admin_notified_at TIMESTAMPTZ,
+  human_replied_at TIMESTAMPTZ,
+  released_at TIMESTAMPTZ,
+  release_reason TEXT CHECK (release_reason IN ('timeout', 'manual', 'admin_command')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON handoff_sessions (conversation_id, created_at DESC);
+```
+
+## Conversation signals
+
+```sql
+CREATE TABLE conversation_signals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  signal_type TEXT NOT NULL,
+  signal_value TEXT NOT NULL,
+  confidence FLOAT,
+  detected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  detected_by TEXT NOT NULL CHECK (detected_by IN ('llm', 'rule', 'human_admin')),
+  raw_evidence TEXT
+);
+
+CREATE INDEX ON conversation_signals (conversation_id, signal_type, detected_at DESC);
+```
+
+## Customer memories
+
+```sql
+CREATE TABLE customer_memories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  customer_jid TEXT NOT NULL,
+  memory_type TEXT NOT NULL,
+  -- 'profile' | 'lead' | 'history' | 'continuity'
+  content TEXT NOT NULL,
+  version INT NOT NULL DEFAULT 1,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(tenant_id, customer_jid, memory_type)
+);
+
+CREATE INDEX ON customer_memories (tenant_id, customer_jid);
+```
+
+## Conversation summaries
+
+```sql
+CREATE TABLE conversation_summaries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  summary_type TEXT NOT NULL,
+  -- 'session_end' | 'human_session' | 'handoff_context'
+  content TEXT NOT NULL,
+  metadata JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON conversation_summaries (conversation_id, summary_type, created_at DESC);
+```
+
+## Dead letters
+
+```sql
+CREATE TABLE dead_letters (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT,
+  source_type TEXT NOT NULL CHECK (source_type IN ('webhook', 'outbox', 'planning', 'buffer')),
+  source_id TEXT,
+  error_message TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  reviewed_at TIMESTAMPTZ,
+  resolution TEXT
+);
+```
+
+## Redis operational state schema
+
+The runtime uses Redis for low-latency operational state alongside Postgres for durable storage. Never use Redis as the primary source of truth for conversation state — always mirror critical state to Postgres.
+
+```text
+Session ownership lock:
+  key:   session:lock:{tenant_id}:{conversation_id}
+  type:  STRING
+  value: "AI" | "HUMAN:{admin_id}"
+  TTL:   900s (15 minutes, reset on each human message)
+  SET NX: use SET ... NX for atomic acquire; only one actor holds the lock
+
+Session state cache (optional, for low-latency reads):
+  key:   session:state:{tenant_id}:{conversation_id}
+  type:  HASH
+  fields:
+    current_state:          idle | user_buffering | ai_planning | ...
+    ownership_token:        AI | HUMAN:{admin_id}
+    last_activity_at:       unix timestamp
+    assigned_agent_id:      null | admin_id
+  TTL:   3600s (evict after 1 hour of inactivity; rebuilt from Postgres on cache miss)
+
+Idempotency guard:
+  key:   idempotency:wamid:{provider}:{instance_id}:{wamid}
+  type:  STRING
+  value: "1"
+  NX:    true (only set if not exists — returns nil on duplicate)
+  EX:    86400 (24 hours covers any realistic retry window)
+
+Circuit breaker state:
+  key:   circuit:llm:{provider}:{tenant_id}
+  type:  STRING
+  value: CLOSED | OPEN | HALF_OPEN
+  TTL:   60s for OPEN state (auto-transitions to HALF_OPEN after window)
+
+Buffer timer (when using Redis ZSET approach):
+  key:   buffer:msgs:{tenant_id}:{conversation_id}   (ZSET)
+  key:   buffer:timer:{tenant_id}:{conversation_id}  (STRING, value = exec_timestamp)
+```
+
+## Row Level Security
+
+Enable RLS when any admin UI, tenant API, or multi-user access is added.
+
+```sql
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outbox_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_memories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE runtime_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversation_signals ENABLE ROW LEVEL SECURITY;
+
+-- Pattern: runtime uses a session variable or JWT claim for tenant_id
+CREATE POLICY tenant_isolation ON conversations
+  USING (tenant_id = current_setting('app.current_tenant_id', true));
+
+-- Repeat for each table
+```
+
+For the managed v1 model where GrowthForge controls all DB access directly (no tenant self-service portal), RLS is a Medium priority. It becomes Critical before any multi-tenant admin UI is exposed.
+
+## Schema checklist
+
+- [ ] Every tenant-scoped table has `tenant_id` column
+- [ ] `conversations.id` uses composite key `{tenant_id}:{customer_jid}`
+- [ ] `webhook_events` has UNIQUE constraint on `(provider, instance_id, message_id, event_type)`
+- [ ] `runtime_events` is insert-only; no UPDATE on this table
+- [ ] `outbox_messages` has `content_hash` for fromMe matching
+- [ ] `message_buffers` has index on `conversation_id WHERE flushed_at IS NULL`
+- [ ] `customer_memories` has UNIQUE on `(tenant_id, customer_jid, memory_type)`
+- [ ] RLS is enabled before any admin UI is shipped
