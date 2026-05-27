@@ -10,6 +10,8 @@
 |---|---|---|
 | `skills/` | WA Agent Core, Basic, Pro | Skill operasional (dipakai semua agent) |
 | `runbook/` | SOP, arsitektur, integrasi | Dokumentasi operasional & teknis |
+| `runbook/evolution-key-webhook-troubleshooting.md` | SOP repair Evolution key drift + webhook disabled | Pegangan Nara saat Lia terlihat sehat tapi WA tidak masuk / 401 |
+| `runbook/lia-v4-alignment-audit.md` | Audit Lia vs WA Architect V4 | Status Basic/Pro, gap V4, dan urutan implementasi |
 | `policies/` | Scope wall, data ownership | Aturan main & boundary |
 | `onboarding/` | Intake form | Form pengumpulan data client |
 | `templates/` | Lead summary template | Template ringkasan lead |

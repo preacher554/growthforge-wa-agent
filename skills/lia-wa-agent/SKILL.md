@@ -17,7 +17,7 @@ WhatsApp → Evolution API (instance: lia-growthforge) → Webhook POST /webhook
 ## Repos & Paths
 
 ```txt
-Runtime:      /root/repos/whatsapp-agent-architect-runtime
+Runtime:      /root/repos/growthforge-wa-agent-runtime  (live systemd path; historical docs may say whatsapp-agent-architect-runtime)
 Persona:      /root/repos/WA_Agent_Persona_Lia  (also on GitHub: preacher554/WA_Agent_Persona_Lia)
 Master Skill: /root/repos/whatsapp-agent-architect
 Evolution:    /root/services/evolution-growthforge
@@ -177,6 +177,8 @@ journalctl -u lia-runtime.service -n 50 --no-pager
 
 - `references/lia-conversation-rules.md` — Canonical Lia system prompt and flow rules
 - `references/lia-runtime-debugging.md` — Silent-reply diagnosis, dedupe ordering, model-switch verification
+- `runbook/evolution-key-webhook-troubleshooting.md` — Evolution 401/key drift + disabled webhook repair SOP
+- `runbook/lia-v4-alignment-audit.md` — Lia vs WA Architect V4 audit, package classification, implementation gaps
 - `references/human-takeover-resume-policy.md` — Same-number handoff + 1-hour resume policy
 - `references/lia-human-resume-implementation.md` — Runtime implementation details for human resume
 - `references/wa-agent-repo-architecture.md` — 3-layer repo model (master skill / persona / runtime)
