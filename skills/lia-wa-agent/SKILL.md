@@ -187,6 +187,9 @@ journalctl -u lia-runtime.service -n 50 --no-pager
 - `references/production-risks.md` — Risk taxonomy (critical/high/medium)
 - `references/implementation-roadmap.md` — Phased rollout plan (Phase 0–6)
 - `templates/runtime-redesign-report.md` — Redesign audit report template
+- `runbook/package-scope-playbook.md` — SOP lengkap: Basic/Pro/Custom scope, flow, QA checklist, intake form
+- `runbook/writing-playbook.md` — **WhatsApp Writing Playbook**: struktur bubble, emoji rules, formatting, template per situasi
+- `vendor/akakooluo-customer-service-scripts/` — Reference library customer service scripts (MIT License, 75 file)
 
 ## Webhook Dedupe
 
