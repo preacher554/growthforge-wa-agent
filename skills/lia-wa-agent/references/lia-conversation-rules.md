@@ -1,6 +1,6 @@
 # Lia Conversation Rules (Canonical)
 
-Source: `/root/repos/growthforge-wa-agent-runtime/app/brain.py` → `SYSTEM_CONTEXT`
+Source: `/root/repos/whatsapp-agent-architect-runtime/app/brain.py` → `SYSTEM_CONTEXT`
 
 ## Time-Aware Greeting (WIB)
 

@@ -3,8 +3,8 @@
 ## Runtime repo
 
 ```txt
-https://github.com/preacher554/growthforge-wa-agent-runtime
-/root/repos/growthforge-wa-agent-runtime
+https://github.com/preacher554/whatsapp-agent-architect-runtime
+/root/repos/whatsapp-agent-architect-runtime
 ```
 
 ## Runtime service

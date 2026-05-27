@@ -20,7 +20,7 @@
 ## Arsitektur repo
 
 ```
-growthforge-wa-agent/            ← MASTER SKILL (repo ini)
+whatsapp-agent-architect/            ← MASTER SKILL (repo ini)
   skills/                        ← Shared capabilities
   runbook/                       ← Shared SOP & docs
   policies/                      ← Shared rules

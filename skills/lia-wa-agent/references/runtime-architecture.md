@@ -3,7 +3,7 @@
 ## Recommended folder structure
 
 ```text
-growthforge-wa-agent-runtime/
+whatsapp-agent-architect-runtime/
 ├── src/
 │   │
 │   ├── gateway/                        # Webhook entry point — must return 200 fast

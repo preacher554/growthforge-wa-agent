@@ -4,7 +4,7 @@
 
 ```txt
 /root/repos/
-├── growthforge-wa-agent/           ← MASTER SKILL (shared, GitHub preacher554)
+├── whatsapp-agent-architect/           ← MASTER SKILL (shared, GitHub preacher554)
 │   ├── skills/                     ← Core, Basic, Pro + lia-wa-agent skill
 │   ├── runbook/                    ← SOP, architecture, integration docs
 │   ├── policies/                   ← Scope wall, data ownership
@@ -21,7 +21,7 @@
 │   ├── handoff-rules.md            ← Escalation triggers
 │   └── tenant.yaml                 ← Config (tenant_id, model, instance)
 │
-├── growthforge-wa-agent-runtime/   ← RUNTIME (private, no GitHub)
+├── whatsapp-agent-architect-runtime/   ← RUNTIME (private, no GitHub)
 │   ├── app/                        ← FastAPI webhook handler
 │   └── src/                        ← Dashboard frontend
 │

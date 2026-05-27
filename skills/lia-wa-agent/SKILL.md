@@ -17,9 +17,9 @@ WhatsApp → Evolution API (instance: lia-growthforge) → Webhook POST /webhook
 ## Repos & Paths
 
 ```txt
-Runtime:      /root/repos/growthforge-wa-agent-runtime
+Runtime:      /root/repos/whatsapp-agent-architect-runtime
 Persona:      /root/repos/WA_Agent_Persona_Lia  (also on GitHub: preacher554/WA_Agent_Persona_Lia)
-Master Skill: /root/repos/growthforge-wa-agent
+Master Skill: /root/repos/whatsapp-agent-architect
 Evolution:    /root/services/evolution-growthforge
 Supabase ref: uxjcvxdmmkvwdnxqcgxb
 PM2 service:  growthforge-mission-monitor (dashboard port 3200)
@@ -45,9 +45,9 @@ When pushing persona changes to GitHub, use the GrowthForge-safe push workflow (
 The WA Agent system uses a 3-layer repo model. See `references/wa-agent-repo-architecture.md` for the full pattern, spawn workflow, and multi-platform setup.
 
 Quick reference:
-- `growthforge-wa-agent` → master skill (shared, no tenant data)
+- `whatsapp-agent-architect` → master skill (shared, no tenant data)
 - `WA_Agent_Persona_Lia` → per-agent persona repo (Lia-specific config)
-- `growthforge-wa-agent-runtime` → runtime code (webhook, Evolution bridge, dashboard)
+- `whatsapp-agent-architect-runtime` → runtime code (webhook, Evolution bridge, dashboard)
 
 To spawn a new customer agent: create `WA_Agent_Persona_<Name>` repo from Lia template, fill in client-specific config, connect via `tenant.yaml`.
 
@@ -63,7 +63,7 @@ Model:    gpt-5.2
 
 Before changing Lia's model, verify the target route with a direct Hermes CLI probe from the runtime repo:
 ```bash
-cd /root/repos/growthforge-wa-agent-runtime
+cd /root/repos/whatsapp-agent-architect-runtime
 hermes chat -Q --provider <provider> -m <model> -q 'Reply with exactly LIA_MODEL_OK and nothing else.'
 ```
 
@@ -151,7 +151,7 @@ COMMIT;
 
 ### Check model currently in use
 ```bash
-grep hermes_model /root/repos/growthforge-wa-agent-runtime/app/config.py
+grep hermes_model /root/repos/whatsapp-agent-architect-runtime/app/config.py
 ```
 
 ### Change model

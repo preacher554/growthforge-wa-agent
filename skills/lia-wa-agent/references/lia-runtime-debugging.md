@@ -17,7 +17,7 @@ Use this reference when Lia receives WhatsApp messages but customers get no repl
    ```
 3. Check DB shape, not only process health:
    ```bash
-   cd /root/repos/growthforge-wa-agent-runtime
+   cd /root/repos/whatsapp-agent-architect-runtime
    python - <<'PY'
    from app.config import load_settings
    import psycopg
@@ -49,7 +49,7 @@ Use this reference when Lia receives WhatsApp messages but customers get no repl
 
 ## Model switch checklist
 
-- Runtime repo: `/root/repos/growthforge-wa-agent-runtime`
+- Runtime repo: `/root/repos/whatsapp-agent-architect-runtime`
 - Edit `app/config.py`: `hermes_model_provider`, `hermes_model`
 - Restart service/process on port 3300
 - Verify settings by importing `load_settings()` from runtime repo

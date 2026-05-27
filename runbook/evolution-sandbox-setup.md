@@ -84,7 +84,7 @@ Not OpenRouter for Lia's primary brain, per Chief's decision.
 ## Next steps
 
 1. Chief sets up Supabase.
-2. Create `growthforge-wa-agent-runtime` backend.
+2. Create `whatsapp-agent-architect-runtime` backend.
 3. Runtime receives Evolution webhooks.
 4. Runtime loads WA Agent skills and Lia persona.
 5. Runtime uses OpenAI OAuth model routing.
