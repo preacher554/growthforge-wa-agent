@@ -51,7 +51,7 @@ CREATE TABLE messages (
   tenant_id TEXT NOT NULL,
   conversation_id TEXT NOT NULL,
   direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound', 'system')),
-  source TEXT NOT NULL CHECK (source IN ('customer', 'ai', 'human_admin', 'system')),
+  source TEXT NOT NULL CHECK (source IN ('end user', 'ai', 'human_admin', 'system')),
   content TEXT NOT NULL,
   provider_message_id TEXT,
   outbox_id UUID,
@@ -195,7 +195,7 @@ CREATE TABLE conversation_signals (
 CREATE INDEX ON conversation_signals (conversation_id, signal_type, detected_at DESC);
 ```
 
-## Customer memories
+## end user memories
 
 ```sql
 CREATE TABLE customer_memories (

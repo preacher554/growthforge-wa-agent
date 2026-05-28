@@ -6,7 +6,7 @@
 
 Build an AI workforce layer for Indonesian businesses, starting with WhatsApp-only 1-on-1 AI receptionist + light sales.
 
-GrowthForge is not just building a chatbot. GrowthForge is building shared AI operations infrastructure where each client gets its own AI context, SOP, memory, WhatsApp instance, products/SKU, customer records, and handoff rules while sharing the same core runtime.
+GrowthForge is not just building a chatbot. GrowthForge is building shared AI operations infrastructure where each client gets its own AI context, SOP, memory, WhatsApp instance, products/SKU, client records, and handoff rules while sharing the same core runtime.
 
 ## Current GrowthForge baseline
 
@@ -88,8 +88,8 @@ Useful patterns from the LangGraph repo:
 
 GrowthForge takeaways:
 
-- Use `customer_id = remote_jid` as the stable thread key.
-- Add a short debounce/aggregation window before AI response to avoid replying three times if the customer sends fragmented messages.
+- Use `client_id = remote_jid` as the stable thread key.
+- Add a short debounce/aggregation window before AI response to avoid replying three times if the end user sends fragmented messages.
 - Store both normalized memory and raw events.
 - Keep the graph small in MVP, but design for nodes later:
 
@@ -98,7 +98,7 @@ normalize_event
 ↓
 load_tenant_context
 ↓
-load_customer_memory
+load_client_memory
 ↓
 classify_intent
 ↓
@@ -174,14 +174,14 @@ Useful patterns:
 GrowthForge takeaways:
 
 - Add `can_reply()` before any model call.
-- Add per-tenant/per-customer quotas.
+- Add per-tenant quotas.
 - Make tool calls first-class:
 
 ```txt
 get_products
 get_pricing_scope
 save_lead_profile
-update_customer_memory
+update_client_memory
 create_handoff
 schedule_follow_up
 check_meeting_slot
@@ -211,7 +211,7 @@ WhatsApp instance
 AI persona/context
 SOP documents
 product/SKU catalog
-customer records
+client records
 conversation state
 memory namespace
 handoff rules
@@ -250,7 +250,7 @@ Add next:
 ```txt
 tenant_sops
 agent_profiles
-customer_profiles
+client_profiles
 products
 product_variants
 conversation_memory
@@ -263,7 +263,7 @@ agent_metrics_daily
 
 ### Customer ID standard
 
-Primary customer identity:
+Primary client identity:
 
 ```txt
 remote_jid = WhatsApp JID, e.g. 6281234567890@s.whatsapp.net
@@ -276,7 +276,7 @@ remote_jid          -- platform-stable WhatsApp ID
 phone_e164          -- +6281234567890
 display_name        -- WhatsApp push name or collected name
 collected_name      -- name given by customer
-business_name       -- customer's business/brand
+business_name       -- client's business/brand
 source_channel      -- whatsapp
 ```
 
@@ -287,7 +287,7 @@ The assistant should not jump straight into explanation. Opening flow:
 ```txt
 1. Greeting
 2. Introduce self
-3. Ask customer name
+3. Ask end user name
 4. Ask business/brand type
 5. Ask what they want help with
 6. Qualify lightly
@@ -319,9 +319,9 @@ custom pricing
 integration request
 payment/contract/legal/refund/complaint
 high-value sales intent
-customer asks human/admin/meeting
+end user asks human/admin/meeting
 AI uncertainty high
-customer repeats same question after failed answer
+end user repeats same question after failed answer
 conversation exceeds quota
 ```
 
@@ -331,7 +331,7 @@ On escalation:
 1. Save handoff_event
 2. Set conversation.state = waiting_human
 3. Notify admin/private channel
-4. Stop AI auto-reply for that customer
+4. Stop AI auto-reply for that end user
 5. Human replies from same WhatsApp number
 6. Human can resume AI later
 ```
@@ -358,12 +358,12 @@ sales_opportunities.stage
 follow_up_tasks.status
 ```
 
-### 3. Semantic/customer memory
+### 3. Semantic/client memory
 
 Short structured facts.
 
 ```txt
-customer_profiles
+client_profiles
 conversation_memory
 lead_summaries
 ```
@@ -386,7 +386,7 @@ Do not rely only on prompt history. Store structured fields.
 Phase 1 tools:
 
 ```txt
-save_customer_profile
+save_client_profile
 save_lead_summary
 create_handoff
 get_product_catalog

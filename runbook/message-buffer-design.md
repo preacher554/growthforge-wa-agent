@@ -10,7 +10,7 @@ Without buffering:
 - User sends "Kak" → AI plans and replies to a single-word greeting
 - User sends "mau tanya soal paket" → AI plans and replies again
 - User sends "yang pro itu gimana" → AI plans and replies a third time
-- Customer receives 3 fragmented AI replies to one incomplete question
+- end user receives 3 fragmented AI replies to one incomplete question
 
 With buffering:
 - All three fragments are held in the buffer

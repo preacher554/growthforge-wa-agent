@@ -58,10 +58,10 @@ After each AI planning step, extract signals from the LLM reasoning output:
 
 ## Prompt instruction for signal extraction
 
-Ask the LLM to return signals as a structured block alongside the customer reply:
+Ask the LLM to return signals as a structured block alongside the end user reply:
 
 ```text
-After your reply to the customer, output a JSON block:
+After your reply to the end user, output a JSON block:
 
 <signals>
 {
@@ -73,7 +73,7 @@ After your reply to the customer, output a JSON block:
 }
 </signals>
 
-Base this only on the customer's actual messages. Do not infer from your own replies.
+Base this only on the end user's actual messages. Do not infer from your own replies.
 ```
 
 ## Rule-based signals (no LLM required for common cases)
@@ -110,7 +110,7 @@ Signals stored in `conversation_signals` enable tenant-level analytics:
 - Lead temperature conversion rates
 - Time-to-frustration patterns by business type
 
-These become value metrics for the managed service — tenants see that the AI is tracking lead quality and customer sentiment.
+These become value metrics for the managed service — tenants see that the AI is tracking lead quality and end user sentiment.
 
 ## Checklist
 

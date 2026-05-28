@@ -131,7 +131,7 @@ ai_decisions            -- what the AI decided (before execution)
 tool_calls              -- tool execution records
 tool_approvals          -- human approval records
 conversation_summaries  -- continuity + session summaries
-customer_memories       -- cross-session customer profiles
+customer_memories       -- cross-session end user profiles
 dead_letters            -- exhausted retry records
 ```
 

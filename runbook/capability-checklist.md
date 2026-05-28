@@ -27,7 +27,7 @@ Use this checklist when auditing a WA Agent runtime. Each category maps to a min
 
 - [ ] Uses per-conversation FIFO queueing
 - [ ] Uses conversation-level locks or optimistic state versioning
-- [ ] Avoids concurrent AI replies for the same customer
+- [ ] Avoids concurrent AI replies for the same end user
 - [ ] Supports stale lock recovery (ai_planning stuck > 30s, ai_sending stuck > 60s)
 - [ ] Stores inbound, outbound, system, and human events immutably
 - [ ] Keeps raw events immutable and derived state rebuildable from event log
@@ -55,7 +55,7 @@ Use this checklist when auditing a WA Agent runtime. Each category maps to a min
 ## Tenant isolation
 
 - [ ] Every data table has `tenant_id` where data could cross tenant boundaries
-- [ ] Memory keys include tenant ID and customer ID (never phone number alone)
+- [ ] Memory keys include tenant ID and end user ID (never phone number alone)
 - [ ] Prompt/SOP/policy bundles are tenant-scoped
 - [ ] Tool permissions are tenant-scoped
 - [ ] Observability and billing are tenant-scoped
@@ -100,12 +100,12 @@ Use this checklist when auditing a WA Agent runtime. Each category maps to a min
 - [ ] Continuity summarizer runs before every resume to active transition
 - [ ] Human session messages collected from messages table (not reconstructed)
 - [ ] Summary injected as labeled block in AI context window
-- [ ] Context assembly follows defined layer order (system → tenant → customer → continuity → history → turn)
+- [ ] Context assembly follows defined layer order (system → tenant → end user → continuity → history → turn)
 
 ## Circuit breaker and resilience
 
 - [ ] LLM failures use exponential backoff, not immediate retry flood
 - [ ] Retry exhaustion auto-escalates to human with SOS notification
-- [ ] Customer receives apologetic message on AI failure — never silence
+- [ ] end user receives apologetic message on AI failure — never silence
 - [ ] Admin receives SOS notification on system failure
 - [ ] Stale lock recovery worker runs on schedule

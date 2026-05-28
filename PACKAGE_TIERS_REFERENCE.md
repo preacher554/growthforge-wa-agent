@@ -1,7 +1,7 @@
-# WA Agent Paket — Panduan GrowthForge
+# Paket & Tier — Referensi Provider
 
 > Referensi package scope GrowthForge berdasarkan playbook v1.0.
-> **Bukan referensi competitor** — ini adalah definisi produk GrowthForge sendiri.
+> **Bukan referensi competitor** — ini adalah definisi produk yang disediakan oleh GrowthForge sebagai provider.
 
 ---
 
@@ -11,7 +11,7 @@
 |---|---|---|
 | **Basic** | AI Receptionist | Jawab chat, FAQ, info layanan, arahkan ke admin |
 | **Pro** | AI Sales Receptionist | Semua Basic + gali kebutuhan, qualify lead, siapkan admin untuk closing |
-| **Custom/Add-on** | Custom Workflow / Integrasi | Payment, catalog, ads, marketplace, voice, dll (butuh assessment) |
+| **Custom/Add-on** | Custom Workflow / Integrasi | Payment, catalog, ads, marketplace, voice, custom workflow |
 
 ---
 
@@ -71,7 +71,7 @@ Greeting → Understand need → Discovery question satu per satu
 
 ---
 
-## Cara Lia Rekomendasikan Paket
+## Cara WA Agent Merekomendasikan Paket
 
 | Kalau user butuh... | Rekomendasikan |
 |---|---|

@@ -25,7 +25,7 @@ Topic: wa-raw-events
   Purpose: holds raw webhook payloads directly from the WhatsApp bridge
 
 Topic: wa-session-events
-  Partition key: phone_number (CRITICAL: ensures FIFO per customer across all workers)
+  Partition key: phone_number (CRITICAL: ensures FIFO per end user across all workers)
   Purpose: holds aggregated, deduplicated, normalized events ready for FSM processing
 ```
 
@@ -34,7 +34,7 @@ Topic: wa-session-events
 ```text
 Consumer group: session-actor-workers
   - Each worker processes one partition
-  - FIFO per customer guaranteed by partition key
+  - FIFO per end user guaranteed by partition key
   - No per-conversation queue lock needed at this scale
 ```
 

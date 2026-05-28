@@ -38,12 +38,12 @@ When a job reaches `attempts = max_attempts` and still fails:
 5. Send SOS notification to admin private JID:
      "[SYSTEM ALERT] AI gagal memproses percakapan dengan {{customer_name}}.
       Tolong tangani manual dari nomor bisnis. Error: {{error_summary}}"
-6. Send apologetic template message to customer:
+6. Send apologetic template message to end user:
      "Maaf Kak, sistem kami sedang mengalami gangguan teknis sementara.
       Tim kami akan segera melanjutkan percakapan ini. Mohon tunggu sebentar 🙏"
 ```
 
-This ensures the customer is never left in silence and the admin is always aware of system failures.
+This ensures the end user is never left in silence and the admin is always aware of system failures.
 
 ## Circuit breaker states (provider-level)
 
@@ -141,7 +141,7 @@ For human_active with last_human_activity_at > inactivity_threshold:
 
 - [ ] LLM failure triggers exponential backoff, not immediate retry flood
 - [ ] Max retry exhaustion auto-escalates to human with SOS notification
-- [ ] Customer receives apologetic message when AI fails — never silence
+- [ ] end user receives apologetic message when AI fails — never silence
 - [ ] Outbox retries resend from stored content, never regenerate
 - [ ] Idempotency check completes in < 5ms
 - [ ] Webhook handler returns 200 in < 200ms regardless of downstream state

@@ -42,7 +42,7 @@ No module may update conversation state directly. All updates go through the sta
 ### AI planning layer
 
 The planner orchestrates but does not implement:
-1. Context assembly (system prompt + tenant knowledge + customer memory + continuity + history + current turn)
+1. Context assembly (system prompt + tenant knowledge + end user memory + continuity + history + current turn)
 2. LLM call
 3. Signal extraction from response
 4. AI decision persistence
@@ -55,13 +55,13 @@ The planner never calls the WhatsApp bridge directly. The outbox worker handles 
 
 Four memory layers with defined read/write timing:
 - Conversation memory (session messages)
-- Customer memory (persistent profiles, leads, history)
+- end user memory (persistent profiles, leads, history)
 - Conversation summaries (cross-session compression)
 - Business knowledge (tenant scope: FAQ, catalog, SOP)
 
 ### Tenant isolation layer
 
-Every runtime row and event must include `tenant_id`. Never key memory globally by phone number alone. Isolate WhatsApp instance, SOP, prompt bundle, catalog, customer data, policy, tools, logs, and billing per tenant.
+Every runtime row and event must include `tenant_id`. Never key memory globally by phone number alone. Isolate WhatsApp instance, SOP, prompt bundle, catalog, end user data, policy, tools, logs, and billing per tenant.
 
 ### Outbox (safe send pattern)
 
@@ -117,7 +117,7 @@ Enqueue: outbox-send queue (delayed by pacing)
   ↓
 pacing-worker: typing indicator → wait → send via bridge → update outbox
   ↓
-WhatsApp delivers to customer
+WhatsApp delivers to end user
 ```
 
 ## Technology guidance
@@ -136,7 +136,7 @@ WhatsApp delivers to customer
 
 When active tenant count exceeds ~50 simultaneous conversations, consider migrating the inbound pipeline to a distributed log (e.g., Kafka):
 
-- Partition key: `phone_number` (ensures FIFO per customer across all workers)
+- Partition key: `phone_number` (ensures FIFO per end user across all workers)
 - Removes need for per-conversation queue locks at scale
 - Significant operational complexity — do not migrate before BullMQ/queue v1 is stable
 

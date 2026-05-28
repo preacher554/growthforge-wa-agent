@@ -4,13 +4,13 @@
 
 ## Critical
 
-- AI and human both reply to the same customer (keyboard fighting).
+- AI and human both reply to the same end user (keyboard fighting).
 - Duplicate webhook causes duplicate AI replies or duplicate tool execution.
 - Webhook blocks on model call and times out, causing provider retries.
 - Same-number human replies are ignored because `fromMe` messages are dropped. This is deployment-blocking for same-number handoff.
 - Retry sends a newly generated answer instead of the original persisted answer.
 - Tenant data leaks through global memory, vector search, prompt context, or logs.
-- Tool executes payment, discount, booking, invoice, refund, or customer mutation without approval.
+- Tool executes payment, discount, booking, invoice, refund, or end user mutation without approval.
 - Invalid model string causes every LLM call to fail after deployment.
 
 ## High
@@ -55,7 +55,7 @@ Production WhatsApp AI is not primarily an intelligence benchmark. It is a distr
 ## Emotional and urgency risks
 
 - Emotional state detected by LLM prompt in turn 3 is not available in turn 8.
-- No runtime escalation threshold; AI continues trying to qualify an angry customer.
+- No runtime escalation threshold; AI continues trying to qualify an angry end user.
 - Urgency not detected; AI buffers an urgent message for the full buffer window.
 - No tenant analytics on emotional state; business cannot demonstrate AI value.
 
@@ -63,10 +63,10 @@ Production WhatsApp AI is not primarily an intelligence benchmark. It is a distr
 
 - No retry backoff: LLM failure causes immediate re-queue, flooding the provider and exhausting the worker pool.
 - No circuit breaker: all conversations stall when the LLM provider is down, instead of auto-escalating.
-- Retry exhaustion produces silence: customer receives no message and admin receives no alert.
+- Retry exhaustion produces silence: end user receives no message and admin receives no alert.
 - Outbox retry regenerates from LLM instead of stored content, producing a different reply than the first attempt.
 - Webhook handler blocks on LLM call: provider retries the webhook, causing duplicate processing even with idempotency.
-- No stale lock recovery: conversation stuck in ai_planning for hours with no customer reply and no admin alert.
+- No stale lock recovery: conversation stuck in ai_planning for hours with no end user reply and no admin alert.
 
 ## Silent observer risks
 

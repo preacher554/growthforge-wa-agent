@@ -6,12 +6,12 @@
 
 When a human admin takes over a conversation and the AI later resumes, the AI re-enters with its original system prompt context. It has no knowledge of:
 
-- What the admin promised the customer
+- What the admin promised the end user
 - What price or discount was negotiated
-- What the customer's current emotional state is
-- What the next action the customer is expecting
+- What the end user's current emotional state is
+- What the next action the end user is expecting
 
-Without a continuity summary, the AI will contradict what the admin said. In business conversations where negotiation is common, this destroys customer trust immediately.
+Without a continuity summary, the AI will contradict what the admin said. In business conversations where negotiation is common, this destroys end user trust immediately.
 
 ## Continuity summarizer — required on every resume
 
@@ -32,8 +32,8 @@ Before transitioning from `resume_pending` to `idle`, the runtime must:
      The following messages were sent by a human admin while the AI was paused.
      Extract and summarize:
      1. Any commitments or promises made (price, discount, timeline, specific action)
-     2. The customer's current emotional state
-     3. What the customer is now waiting for or expecting
+     2. The end user's current emotional state
+     3. What the end user is now waiting for or expecting
      4. Recommended first AI message after resuming
 
      Messages:
@@ -54,7 +54,7 @@ Before transitioning from `resume_pending` to `idle`, the runtime must:
 
 ## Memory types
 
-The runtime maintains four distinct memory layers per customer, per tenant.
+The runtime maintains four distinct memory layers per end user, per tenant.
 
 ### 1. Conversation memory (session scope)
 
@@ -65,9 +65,9 @@ Stored as rows in the messages table.
 Context builder selects last N messages (typically 20–40) ordered by received_at.
 ```
 
-### 2. Customer memory (persistent across conversations)
+### 2. end user memory (persistent across conversations)
 
-Key facts about the customer that persist between separate conversation sessions. Updated after each session ends or at significant events.
+Key facts about the end user that persist between separate conversation sessions. Updated after each session ends or at significant events.
 
 ```sql
 CREATE TABLE customer_memories (
@@ -110,7 +110,7 @@ CREATE TABLE conversation_summaries (
 
 ### 4. Business knowledge (tenant scope)
 
-The tenant's product catalog, FAQ, SOP, sales script, objection responses. Loaded once per tenant and injected into every AI context as the base knowledge layer. Not per-customer.
+The tenant's product catalog, FAQ, SOP, sales script, objection responses. Loaded once per tenant and injected into every AI context as the base knowledge layer. Not per-end user.
 
 Stored in tenant config files and loaded at conversation start.
 
@@ -121,7 +121,7 @@ When building AI context for a planning step, assemble layers in this order:
 ```text
 1. System prompt (persona + package rules)
 2. Tenant knowledge block (business profile, FAQ, approved prices, handoff rules)
-3. Customer memory block (profile, lead status, past interactions)
+3. end user memory block (profile, lead status, past interactions)
 4. Human session continuity block (if resuming after human takeover)
 5. Recent conversation history (last 20–40 messages)
 6. Current merged turn (from buffer flush)
@@ -133,7 +133,7 @@ Each block is clearly labeled so the LLM can distinguish sources.
 
 | Event | Memory Action |
 |---|---|
-| Customer provides name | Update `customer_memories` type=profile |
+| end user provides name | Update `customer_memories` type=profile |
 | Lead status classified | Update `customer_memories` type=lead |
 | Session idle for 2 hours | Write `conversation_summaries` type=session_end |
 | Handoff triggered | Write `conversation_summaries` type=handoff_context |
@@ -142,7 +142,7 @@ Each block is clearly labeled so the LLM can distinguish sources.
 
 ## Tenant isolation rule
 
-Memory keys must always include `tenant_id`. Never look up customer memory by phone number alone. A customer calling two different businesses (tenants) must have completely separate memory records.
+Memory keys must always include `tenant_id`. Never look up end user memory by phone number alone. A end user calling two different businesses (tenants) must have completely separate memory records.
 
 ```text
 WRONG:  customer_memories WHERE customer_jid = '+62812xxxx'
@@ -164,7 +164,7 @@ When `owner = 'human'` (states: `human_active`, `resume_pending`, `cooldown`):
 - [ ] Continuity summarizer runs before every resume_pending → idle transition
 - [ ] Human session messages are collected from messages table, not reconstructed from memory
 - [ ] Continuity summary is injected as a labeled block, not appended raw
-- [ ] Customer memory includes lead status, profile, and history separately
+- [ ] end user memory includes lead status, profile, and history separately
 - [ ] Memory lookups always include tenant_id
 - [ ] Context assembly follows a defined layer order
 - [ ] Rolling summaries are written at session end to avoid context overflow

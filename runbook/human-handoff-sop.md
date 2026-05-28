@@ -6,7 +6,7 @@ Ensure the AI stops and escalates when human authority, missing information, or 
 
 ## Handoff triggers
 
-Always handoff when customer asks for:
+Always handoff when the end user asks for:
 
 - final custom price,
 - discount approval,
@@ -15,18 +15,15 @@ Always handoff when customer asks for:
 - legal/medical/financial decision,
 - partnership/custom deal,
 - unavailable/missing business info,
-- angry customer,
+- angry messages,
 - integration/custom workflow,
 - payment issue.
 
 ## Handoff keyword detection
 
-Handoff triggers can also be activated by configured keywords (from tenant `handoff-rules.md`).
-
-v2 rules:
 - Use **word boundary matching** to prevent false positives.
-- Keyword `custom` must NOT match inside `customer`, `customize`, or similar.
-- Test regex: `\bcustom\b` matches standalone "custom" but not "customer".
+- Keyword `custom` must NOT match inside `client`, `customize`, or similar.
+- Compile keyword list per tenant from `handoff-rules.md`.
 
 ## Basic package handoff
 
@@ -37,57 +34,53 @@ Basic should handoff early when conversation moves beyond FAQ or simple booking/
 Pro may qualify the lead first, then handoff with summary when:
 
 - lead is hot,
-- customer requests next step,
+- end user requests next step,
 - custom pricing is needed,
-- customer asks for human confirmation,
+- end user asks for human confirmation,
 - AI confidence is low.
 
 ## Primary handoff model (v2)
 
-The default GrowthForge handoff model is **admin notification + same-number human reply**:
-
 ```txt
-customer chats business WhatsApp number
+end user chats business WhatsApp number
 ↓
 AI detects handoff trigger
 ↓
-AI tells customer it will forward to admin
+AI tells end user it will forward to admin
 ↓
 AI sends handoff reply via outbox → state: waiting_human → owner: human
 ↓
-system sends handoff notification to the owner's/admin's private WhatsApp number
+System sends handoff notification to admin's private WhatsApp number
 ↓
-human admin replies to the customer using the same business/number
+Admin replies from the same business/number
 ↓
-Evolution webhook: fromMe: true → runtime classifies as human admin message
+fromMe: true → runtime classifies as human admin message
 ↓
-Runtime persists human message, transitions state → human_active
+Runtime persists, transitions → human_active
 ↓
 last_human_activity_at = now()
 ↓
-customer inbounds within 1 hour → stored, no AI reply
+end user inbounds within 1 hour → stored, no AI reply
 ↓
-customer inbound after 1 hour → ai_active, context-preserving resume
+end user inbound after 1 hour → ai_active, context-preserving resume
 ↓
 any new fromMe:true resets the 1-hour timer
 ```
 
-The customer stays on the same WhatsApp number. Business identity remains consistent.
-
-## Handoff message to customer
+## Handoff message to end user
 
 ```txt
 Baik Kak, untuk bagian itu aku bantu teruskan ke admin ya supaya jawabannya lebih tepat. Mohon tunggu sebentar.
 ```
 
-Include business hours if relevant (e.g., admin available 09:00-17:00 WIB). Don't ask when the user is free.
+Include business hours if relevant. Don't ask when the user is free.
 
 ## Admin notification message
 
 ```txt
 [WA Agent Handoff]
 Tenant: {{tenant_id}}
-Customer: {{customer_name}} / {{customer_phone}}
+Client: {{client_name}} / {{client_phone}}
 Reason: {{escalation_reason}}
 Lead status: {{lead_status}}
 Last message: {{last_message}}
@@ -95,12 +88,10 @@ Last message: {{last_message}}
 Recommended next action:
 {{recommended_next_action}}
 
-AI sudah pause untuk chat ini. Silakan balas customer dari nomor WhatsApp bisnis/agent yang sama.
+AI sudah pause untuk chat ini. Silakan balas dari nomor WA bisnis/agent yang sama.
 ```
 
 ## Conversation states + ownership (v2)
-
-Two orthogonal dimensions:
 
 **Lifecycle states:**
 ```txt
@@ -117,57 +108,46 @@ owner: human    = Human has taken over; AI hard-locked out
 owner: system   = System operations only
 ```
 
-When `owner: human`, NO model call is made regardless of inbound volume. This is a hard boundary.
+When `owner: human`, NO model call is made. Hard boundary regardless of inbound volume.
 
 ## 1-hour human window — critical rules
 
-1. **No proactive send on timer expiry.** The 1-hour window only makes the conversation eligible for AI reply on the next customer inbound. It must NEVER cause the AI to send an unsolicited message.
-
-2. **Timer resets on human activity.** Any new `fromMe: true` (admin reply) resets the 1-hour clock.
-
-3. **Customer messages during the window are stored.** They are saved to the DB for context continuity but do not trigger AI replies.
-
-4. **Resume is context-preserving.** The next customer inbound after the window:
-   - Transitions to `ai_active`, owner: `ai`
-   - Injects a resume note into the model prompt (see below)
-   - Does NOT restart the conversation from a greeting
+1. **No proactive send on timer expiry.** The 1-hour window only enables AI reply on the next end user inbound.
+2. **Timer resets on human activity.** Any new `fromMe: true` resets the clock.
+3. **End user messages during the window are stored** for context continuity.
+4. **Resume is context-preserving** — the next end user inbound after the window transitions to ai_active with resume note injected.
 
 ## Resume prompt engineering (v2)
 
-When building model context after human takeover:
-
-1. Label human admin outbound messages as `Admin [TenantName]`, NOT as the AI agent.
-2. Inject a system-level operational note:
+1. Label human admin messages as `Admin [TenantName]`, NOT as the AI agent.
+2. Inject operational note:
    ```
-   Percakapan ini baru di-resume otomatis setelah admin/human GrowthForge mengambil alih.
-   Balas sebagai WA Agent yang aktif kembali. Jangan ulang dari awal; lanjutkan natural dari konteks chat.
-   Jika cocok, awali singkat dengan 'Aku [nama agent] bantu lanjut ya Kak.'
+   Percakapan ini baru di-resume otomatis setelah admin mengambil alih.
+   Balas sebagai WA Agent yang aktif kembali. Jangan ulang dari awal; lanjutkan natural.
    ```
-3. Include the full conversation window including human admin messages.
-4. If history is non-empty on resume, never ask name/business again.
+3. Include full conversation window including human admin messages.
+4. Never ask name/business again if history is non-empty.
 
 ## Outbox echo handling
 
-Lia's own outbound messages arrive as `fromMe: true` when Evolution delivers sent-message events. v2 distinguishes:
+AI's own outbound messages arrive as `fromMe: true` when sent-message events are delivered. The runtime distinguishes:
 
 ```txt
 fromMe: true
   ↓
 Matches a pending outbox row?
-  ├─ Yes → Mark outbox as sent (echo) → no state change
+  ├─ Yes → Mark as sent (echo) → no state change
   └─ No → Human admin message → persist + state transition
 ```
 
-Without this, every Lia reply would be misclassified as human takeover.
-
 ## QA checklist
 
-- [ ] Handoff keyword `custom` does NOT match `customer`
-- [ ] Lia stops replying after handoff (state: waiting_human)
+- [ ] Handoff keyword `custom` does NOT match `client`
+- [ ] AI stops replying after handoff (state: waiting_human)
 - [ ] Admin notification sent to private WA
 - [ ] fromMe: true correctly classified (echo vs human)
-- [ ] 1-hour window: customer messages stored, no AI reply
-- [ ] 1-hour timer expiry: NO proactive send
+- [ ] 1-hour window: end user messages stored, no AI reply
+- [ ] Timer expiry: NO proactive send
 - [ ] Resume after timer: contextual, not a restart
 - [ ] New fromMe: true resets timer
 - [ ] Human outbound messages labeled as "Admin" in model history

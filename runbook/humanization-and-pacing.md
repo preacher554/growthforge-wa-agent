@@ -33,7 +33,7 @@ Cap: `T_max = 8.0 seconds`. Never delay longer than this regardless of response 
 
 ### T_base: sentiment-aware read time
 
-`T_base` is based on the complexity and sentiment of the **incoming** customer message. The AI simulates "thinking about what was just said."
+`T_base` is based on the complexity and sentiment of the **incoming** end user message. The AI simulates "thinking about what was just said."
 
 ```text
 incoming message is simple greeting only (Halo, Hi, Selamat pagi):
@@ -96,7 +96,7 @@ Splitting rules:
 
 ## Layer 4 — Read receipt awareness
 
-Optionally use read receipt to reduce delay for already-open conversations, since the customer is actively waiting.
+Optionally use read receipt to reduce delay for already-open conversations, since the end user is actively waiting.
 
 ```text
 if customer_has_open_chat:
@@ -112,7 +112,7 @@ Do not send multiple AI messages in rapid succession even when chunking. Rapid d
 ```text
 minimum_inter_message_gap_ms = 1000
 
-Always enforce this gap between consecutive outbound messages to the same customer,
+Always enforce this gap between consecutive outbound messages to the same end user,
 regardless of whether they are chunks of one response or separate planned replies.
 ```
 
