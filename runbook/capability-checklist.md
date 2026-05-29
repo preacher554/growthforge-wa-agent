@@ -102,6 +102,54 @@ Use this checklist when auditing a WA Agent runtime. Each category maps to a min
 - [ ] Summary injected as labeled block in AI context window
 - [ ] Context assembly follows defined layer order (system → tenant → end user → continuity → history → turn)
 
+## Business stage engine (V5 — Pro/Custom)
+
+- [ ] Business stage is separate from runtime state (two dimensions)
+- [ ] Business stage persists through runtime changes and human takeovers
+- [ ] Stage transitions emit runtime events
+- [ ] AI context includes current stage and stage-appropriate directive
+- [ ] AI does not re-pitch or re-qualify when stage shows the end user already passed that point
+- [ ] Admin can manually override stage
+- [ ] Tag auto-assignment fires on stage transitions
+
+## WhatsApp writing engine (V5 — Pro/Custom)
+
+- [ ] One idea per bubble enforced at output layer
+- [ ] Repetitive greeting suppressed after session message 1
+- [ ] One question per bubble (multiple questions split)
+- [ ] Bubble length capped at 280 characters
+- [ ] Banned corporate phrases detected and removed
+- [ ] Emoji density adapts to business stage and relationship warmth
+- [ ] Generic closers replaced with contextual questions
+
+## Business modules (V5 — Pro/Custom)
+
+- [ ] Module capability check before execution
+- [ ] Module failures isolated from planning worker
+- [ ] Scheduled follow-ups check current state before sending
+- [ ] Follow-ups have max_attempts cap
+- [ ] outside-hours message sent once per session only
+- [ ] Stall detector runs on schedule
+
+## Social and operational memory (V5 — Pro/Custom)
+
+- [ ] Social memory queried before every AI planning step
+- [ ] AI does not re-introduce company if already introduced
+- [ ] explained_topics prevents full re-explanation
+- [ ] relationship_warmth controls greeting style
+- [ ] Operational memory queried on session start to determine initial stage
+- [ ] Price quotes and negotiations written to operational memory
+- [ ] Discount limit enforced from tenant config
+- [ ] Payment status drives business stage override on session start
+
+## CRM tagging and pipeline (V5 — Pro/Custom)
+
+- [ ] Conflicting tags removed before assigning replacement
+- [ ] Tags injected into AI context as [ACTIVE_TAGS] block
+- [ ] Behavior matrix enforced (no pitch to Escalated/Complaint)
+- [ ] Admin-assigned tags never auto-removed
+- [ ] Pipeline queries available for admin view
+
 ## Circuit breaker and resilience
 
 - [ ] LLM failures use exponential backoff, not immediate retry flood

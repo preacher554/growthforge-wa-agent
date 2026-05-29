@@ -6,7 +6,7 @@ GrowthForge WA Agent v1 only supports Basic and Pro as standard packages.
 
 ### Positioning
 
-AI receptionist for WhatsApp that answers common customer questions quickly and consistently.
+AI receptionist for WhatsApp that answers common end user questions quickly and consistently.
 
 ### Best for
 
@@ -20,7 +20,7 @@ AI receptionist for WhatsApp that answers common customer questions quickly and 
 
 ### Core value
 
-Customer chats stay answered even when the owner/admin is busy.
+end user chats stay answered even when the owner/admin is busy.
 
 ### AI can
 
@@ -31,7 +31,7 @@ Customer chats stay answered even when the owner/admin is busy.
 - explain basic pricing if approved,
 - explain order/booking steps,
 - collect name and simple needs,
-- remember basic customer context within tenant memory,
+- remember basic end user context within tenant memory,
 - hand off to admin.
 
 ### AI cannot
@@ -45,7 +45,7 @@ Customer chats stay answered even when the owner/admin is busy.
 - handle complaints requiring authority,
 - integrate with CRM/payment/ads by default.
 
-### Required customer data
+### Required end user data
 
 - business name,
 - WhatsApp number,
@@ -85,7 +85,7 @@ Incoming chats become cleaner, more qualified leads instead of scattered convers
 Everything in Basic, plus:
 
 - ask discovery/probing questions,
-- identify customer intent,
+- identify end user intent,
 - classify lead as hot/warm/cold,
 - capture pain point, urgency, budget signal, and desired outcome,
 - answer basic objections from approved scripts,
@@ -104,12 +104,12 @@ Everything in Basic, plus:
 - auto-close deals without human policy,
 - handle SKU/stock unless Commerce add-on is explicitly enabled.
 
-### Required customer data
+### Required end user data
 
 Everything in Basic, plus:
 
 - offer/service packages,
-- ideal customer profile,
+- ideal end user profile,
 - qualification questions,
 - objection-handling script,
 - lead status rules,

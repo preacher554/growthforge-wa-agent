@@ -195,7 +195,8 @@ CREATE TABLE conversation_signals (
 CREATE INDEX ON conversation_signals (conversation_id, signal_type, detected_at DESC);
 ```
 
-## end user memories
+## Client memories (cross-session)
+> Note: Table name `customer_memories` is retained for backward compatibility. In the center documentation use "client".
 
 ```sql
 CREATE TABLE customer_memories (
@@ -266,6 +267,109 @@ CREATE POLICY tenant_isolation ON conversations
 ```
 
 For the managed v1 model where GrowthForge controls all DB access directly (no tenant self-service portal), RLS is Medium priority. It becomes Critical before any multi-tenant admin UI is exposed.
+
+## Social memories (V5)
+> New in Runtime Architect v5. Tracks social continuity — what has been established with the end user across sessions.
+
+```sql
+CREATE TABLE social_memories (
+  id UUID PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  customer_jid TEXT NOT NULL,
+  introduced_company BOOLEAN NOT NULL DEFAULT false,
+  known_customer_name TEXT,
+  known_customer_role TEXT,
+  known_business_type TEXT,
+  relationship_warmth TEXT NOT NULL DEFAULT 'new',
+  -- new | acquainted | warm | returning | loyal
+  explained_topics JSONB NOT NULL DEFAULT '[]',
+  known_customer_intent TEXT,
+  known_customer_pain_points JSONB NOT NULL DEFAULT '[]',
+  prior_questions JSONB NOT NULL DEFAULT '[]',
+  interaction_count INT NOT NULL DEFAULT 0,
+  last_session_summary TEXT,
+  preferred_language TEXT DEFAULT 'id',
+  preferred_formality TEXT DEFAULT 'auto',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(tenant_id, customer_jid)
+);
+```
+
+## Operational memories (V5)
+> New in Runtime Architect v5. Tracks business pipeline state — pricing, payment, onboarding progress.
+
+```sql
+CREATE TABLE operational_memories (
+  id UUID PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  customer_jid TEXT NOT NULL,
+  lead_stage TEXT NOT NULL DEFAULT 'new',
+  lead_temperature TEXT DEFAULT 'unknown',
+  selected_package TEXT,
+  quoted_price NUMERIC,
+  negotiated_price NUMERIC,
+  discount_given NUMERIC,
+  discount_type TEXT,
+  payment_status TEXT DEFAULT 'none',
+  invoice_sent BOOLEAN NOT NULL DEFAULT false,
+  invoice_sent_at TIMESTAMPTZ,
+  payment_confirmed_at TIMESTAMPTZ,
+  payment_method TEXT,
+  onboarding_status TEXT DEFAULT 'not_started',
+  delivery_promised_at TIMESTAMPTZ,
+  access_granted BOOLEAN NOT NULL DEFAULT false,
+  last_human_decision TEXT,
+  last_human_decision_at TIMESTAMPTZ,
+  next_expected_action TEXT,
+  loss_reason TEXT,
+  stage_entered_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(tenant_id, customer_jid)
+);
+```
+
+## Scheduled follow-ups (V5)
+> New in Runtime Architect v5. Queued outbound follow-up messages (payment reminders, re-engagement).
+
+```sql
+CREATE TABLE scheduled_followups (
+  id UUID PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  customer_jid TEXT NOT NULL,
+  action_type TEXT NOT NULL,
+  -- payment_reminder | stall_reengagement | custom
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  context_hint TEXT,
+  max_attempts INT NOT NULL DEFAULT 2,
+  attempt_count INT NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'pending',
+  last_attempt_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON scheduled_followups (tenant_id, scheduled_at) WHERE status = 'pending';
+```
+
+## Conversation tags (V5)
+> New in Runtime Architect v5. Behavioral markers that influence AI behavior and enable pipeline views.
+
+```sql
+CREATE TABLE conversation_tags (
+  id UUID PRIMARY KEY,
+  tenant_id TEXT NOT NULL,
+  customer_jid TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  tag TEXT NOT NULL,
+  assigned_by TEXT NOT NULL,           -- 'runtime' | 'admin' | 'system'
+  assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  removed_at TIMESTAMPTZ,
+  removal_reason TEXT
+);
+
+CREATE INDEX ON conversation_tags (tenant_id, customer_jid) WHERE removed_at IS NULL;
+CREATE INDEX ON conversation_tags (tenant_id, tag) WHERE removed_at IS NULL;
+```
 
 ## Schema checklist
 
